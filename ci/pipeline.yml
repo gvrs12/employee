@@ -1,0 +1,90 @@
+jobs:
+- name: run-tests
+  public: true
+  serial: true
+  plan:
+  - get: dev-src
+    trigger: true
+  - get: test-image
+  
+  - task: run-tests
+    image: test-image
+    config:
+        platform: linux
+
+        inputs:
+          - name: dev-src
+       
+        run:
+          path: ./dev-src/runtests.sh
+
+- name: build
+  public: true
+  serial: true
+  plan:
+  - get: dev-src
+  - get: shared-pipeline
+  - get: test-image
+    passed: [run-tests]
+    trigger: true
+  - get: deploy-image
+  - task: build
+    image: deploy-image
+    config:
+        platform: linux
+
+        inputs:
+          - name: shared-pipeline
+          - name: dev-src
+       
+        run:
+          path: ./dev-src/publish.sh
+    params:
+      env: dev
+      pcf_account_password: ((cfnp-1-dev-user.password))
+      pcf_account_username: ((cfnp-1-dev-user.username))
+      pcf_api_endpoint_uri: https://api.sys.cfnp-1.gaig.com
+      pcf_app_name: employee
+      pcf_app_suffix_from: ""
+      pcf_app_suffix_to: -release-candidate
+      must_current_app_exist: false
+      pcf_org_name: developers
+      pcf_route_domain: app.cfnp-1.gaig.com
+      pcf_space_name: dev
+resources:
+- name: dev-src
+  type: git
+  check_every: 1m
+  source:
+    uri: https://github.com/gvrs12/employee.git
+    branch: master
+    check: true
+- name: test-image
+  check_every: 30m
+  source:
+    insecure_registries:
+      - cvglpnexus01.td.afg:5500
+    password: ((nexus-image-upload.password))
+    repository: cvglpnexus01.td.afg:5500/cloud-native/test
+    tag: 8
+    username: ((nexus-image-upload.username))
+  type: docker-image
+- name: deploy-image
+  check_every: 30m
+  source:
+    insecure_registries:
+      - cvglpnexus01.td.afg:5500
+    password: ((nexus-image-upload.password))
+    repository: cvglpnexus01.td.afg:5500/cloud-native/deploy
+    tag: latest
+    username: ((nexus-image-upload.username))
+  type: docker-image
+- name: shared-pipeline
+  check_every: 1m
+  source:
+    branch: master
+    check: true
+    uri: https://github.gaig.com/CloudNativeApps/cloud-native-central-pipeline
+    username: ((github-api-user))
+    password: ((github-api-token))
+  type: git
