@@ -16,7 +16,7 @@ jobs:
           - name: dev-src
        
         run:
-          path: ./dev-src/runtests.sh
+          path: ./dev-src/ci/runtests.sh
 
 - name: build
   public: true
@@ -38,7 +38,7 @@ jobs:
           - name: dev-src
        
         run:
-          path: ./dev-src/publish.sh
+          path: ./dev-src/ci/publish.sh
     params:
       env: dev
       pcf_account_password: ((cfnp-1-dev-user.password))
