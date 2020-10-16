@@ -50,7 +50,7 @@ jobs:
       must_current_app_exist: false
       pcf_org_name: developers
       pcf_route_domain: app.cfnp-1.gaig.com
-      pcf_space_name: dev
+      pcf_space_name: sguddeti
 resources:
 - name: dev-src
   type: git
